@@ -4,19 +4,71 @@
   <meta charset="UTF-8">
   <title>QR Code Generator</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; }
+    .input-group { margin: 20px; }
+    .input-group label { display: block; margin: 5px 0; }
+    input, select { padding: 5px; margin: 5px; width: 200px; }
+    button { padding: 8px 16px; margin: 5px; }
+  </style>
 </head>
 <body>
-  <input type="text" id="text" placeholder="Enter text or URL (e.g., 汉字, 日本語, 한글)">
+  <h2>QR Code Generator</h2>
+  <div class="input-group">
+    <label for="qrType">QR Code Type:</label>
+    <select id="qrType" onchange="toggleInputs()">
+      <option value="text">Text/URL</option>
+      <option value="wifi">WiFi</option>
+    </select>
+  </div>
+  <div class="input-group" id="textInputs">
+    <label for="text">Text/URL:</label>
+    <input type="text" id="text" placeholder="Enter text or URL (e.g., 汉字, 日本語, 한글)">
+  </div>
+  <div class="input-group" id="wifiInputs" style="display: none;">
+    <label for="wifiSSID">WiFi SSID:</label>
+    <input type="text" id="wifiSSID" placeholder="Enter WiFi SSID (e.g., MyNetwork)">
+    <label for="wifiType">Encryption Type:</label>
+    <select id="wifiType">
+      <option value="">No Encryption</option>
+      <option value="WPA">WPA/WPA2</option>
+      <option value="WEP">WEP</option>
+    </select>
+    <label for="wifiPassword">WiFi Password:</label>
+    <input type="text" id="wifiPassword" placeholder="Enter WiFi Password">
+  </div>
   <button onclick="generateQR()">Generate QR Code</button>
   <div id="qrcode"></div>
 
   <script>
+    function toggleInputs() {
+      const qrType = document.getElementById('qrType').value;
+      document.getElementById('textInputs').style.display = qrType === 'text' ? 'block' : 'none';
+      document.getElementById('wifiInputs').style.display = qrType === 'wifi' ? 'block' : 'none';
+    }
+
     function generateQR() {
-      const text = document.getElementById('text').value;
+      const qrType = document.getElementById('qrType').value;
+      let text = '';
+
+      if (qrType === 'text') {
+        text = document.getElementById('text').value;
+      } else if (qrType === 'wifi') {
+        const ssid = document.getElementById('wifiSSID').value;
+        const wifiType = document.getElementById('wifiType').value;
+        const wifiPassword = document.getElementById('wifiPassword').value;
+        if (!ssid || !wifiPassword) {
+          alert('Please enter WiFi SSID and Password!');
+          return;
+        }
+        text = `WIFI:S:${ssid};T:${wifiType};P:${wifiPassword};;`;
+      }
+
       if (!text) {
-        alert('Please enter some text!');
+        alert('Please enter required information!');
         return;
       }
+
       document.getElementById('qrcode').innerHTML = '';
       new QRCode(document.getElementById('qrcode'), {
         text: text,

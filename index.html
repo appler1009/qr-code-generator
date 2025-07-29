@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>QR Code Generator</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/qrious@4.0.2/dist/qrious.min.js" onerror="console.error('Failed to load QRious from CDN:', event)"></script>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; }
     .input-group { margin: 20px; }
@@ -16,7 +16,7 @@
   <h2>QR Code Generator</h2>
   <div class="input-group">
     <label for="qrType">QR Code Type:</label>
-    <select id="qrType" onchange="toggleInputs()">
+    <select id="qrType">
       <option value="text">Text/URL</option>
       <option value="wifi">WiFi</option>
     </select>
@@ -37,46 +37,54 @@
     <label for="wifiPassword">WiFi Password:</label>
     <input type="text" id="wifiPassword" placeholder="Enter WiFi Password">
   </div>
-  <button onclick="generateQR()">Generate QR Code</button>
+  <button id="generateBtn">Generate QR Code</button>
   <div id="qrcode"></div>
 
   <script>
-    function toggleInputs() {
-      const qrType = document.getElementById('qrType').value;
-      document.getElementById('textInputs').style.display = qrType === 'text' ? 'block' : 'none';
-      document.getElementById('wifiInputs').style.display = qrType === 'wifi' ? 'block' : 'none';
-    }
+    try {
+      function toggleInputs() {
+        const qrType = document.getElementById('qrType').value;
+        document.getElementById('textInputs').style.display = qrType === 'text' ? 'block' : 'none';
+        document.getElementById('wifiInputs').style.display = qrType === 'wifi' ? 'block' : 'none';
+      }
 
-    function generateQR() {
-      const qrType = document.getElementById('qrType').value;
-      let text = '';
+      function generateQR() {
+        const qrType = document.getElementById('qrType').value;
+        let text = '';
 
-      if (qrType === 'text') {
-        text = document.getElementById('text').value;
-      } else if (qrType === 'wifi') {
-        const ssid = document.getElementById('wifiSSID').value;
-        const wifiType = document.getElementById('wifiType').value;
-        const wifiPassword = document.getElementById('wifiPassword').value;
-        if (!ssid || !wifiPassword) {
-          alert('Please enter WiFi SSID and Password!');
+        if (qrType === 'text') {
+          text = document.getElementById('text').value;
+        } else if (qrType === 'wifi') {
+          const ssid = document.getElementById('wifiSSID').value;
+          const wifiType = document.getElementById('wifiType').value;
+          const wifiPassword = document.getElementById('wifiPassword').value;
+          if (!ssid || !wifiPassword) {
+            alert('Please enter WiFi SSID and Password!');
+            return;
+          }
+          text = `WIFI:S:${ssid};T:${wifiType};P:${wifiPassword};;`;
+        }
+
+        if (!text) {
+          alert('Please enter required information!');
           return;
         }
-        text = `WIFI:S:${ssid};T:${wifiType};P:${wifiPassword};;`;
+
+        document.getElementById('qrcode').innerHTML = '';
+        const qr = new QRious({
+          element: document.getElementById('qrcode').appendChild(document.createElement('canvas')),
+          value: text,
+          size: 128,
+          level: 'H' // High error correction for larger data
+        });
       }
 
-      if (!text) {
-        alert('Please enter required information!');
-        return;
-      }
-
-      document.getElementById('qrcode').innerHTML = '';
-      new QRCode(document.getElementById('qrcode'), {
-        text: text,
-        width: 256,
-        height: 256,
-        charsetSource: 'UTF-8',
-        charset: 'UTF-8'
-      });
+      document.getElementById('qrType').addEventListener('change', toggleInputs);
+      document.getElementById('generateBtn').addEventListener('click', generateQR);
+      toggleInputs();
+    } catch (error) {
+      console.error('Script error details:', error);
+      alert('An error occurred while running the script. Check the console for details.');
     }
   </script>
 </body>
